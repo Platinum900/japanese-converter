@@ -62,18 +62,19 @@
     async function processText() {
         const text = document.getElementById('input').value;
         const output = document.getElementById('output');
-        
-        // 貼上你剛才複製的 GAS URL
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbwNmIrpThvGamraSWi8a0_Go2xExloaZ_TRvNI3SCNWcpeZKSXYjtdPEh3_Xq4ytQ7u_w/exec"; 
-        
-        output.innerHTML = "正在向 Google 雲端查詢...";
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwNmIrpThvGamraSWi8a0_Go2xExloaZ_TRvNI3SCNWcpeZKSXYjtdPEh3_Xq4ytQ7u_w/exec"; // 務必換成你最新的 URL
+
+        output.innerHTML = "正在處理中...";
 
         try {
             const response = await fetch(`${GAS_URL}?text=${encodeURIComponent(text)}`);
             const data = await response.json();
-            output.innerHTML = "API 回傳成功：" + JSON.stringify(data);
+            
+            // 顯示結果
+            output.innerHTML = `<strong>原文：</strong> ${data.original}<br>` + 
+                            `<strong>拼音：</strong> ${data.hiragana}`;
         } catch (e) {
-            output.innerHTML = "連接失敗，請檢查權限是否設為「所有人」。";
+            output.innerHTML = "查詢失敗，請檢查網路連線。";
         }
     }
 
