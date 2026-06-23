@@ -3,69 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>輕量版拼音校對</title>
+    <title>日文閱讀校對工具</title>
     <script src="https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f4f9; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; }
-        #status { color: #555; font-size: 0.9em; margin-bottom: 10px; }
-        textarea { width: 100%; height: 100px; box-sizing: border-box; }
-        #output { margin-top: 20px; line-height: 2.5; white-space: pre-wrap; }
-        rt { color: #d35400; font-size: 0.6em; background: #fff3cd; cursor: pointer; }
+        body { font-family: sans-serif; padding: 15px; background: #f4f4f9; margin: 0; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 15px; border-radius: 8px; }
+        textarea { width: 100%; height: 120px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        .controls { display: flex; gap: 10px; margin-top: 10px; }
+        .btn { flex: 1; padding: 12px; cursor: pointer; border: none; border-radius: 6px; font-weight: bold; color: white; }
+        
+        #output { 
+            margin-top: 20px; 
+            font-size: 1.2rem; 
+            line-height: 2.2; 
+            white-space: pre-wrap; 
+            word-wrap: break-word;
+        }
+        
+        /* 核心 Ruby 垂直排版修正 */
+        ruby {
+            display: inline-ruby; /* 確保瀏覽器將其視為 ruby 容器 */
+            ruby-position: over;   /* 強制拼音在上方 */
+            margin: 0 2px;
+            vertical-align: middle;
+        }
+
+        rt {
+            cursor: text;
+            color: #d35400;
+            font-size: 0.6em;      /* 拼音字體大小 */
+            font-weight: bold;
+            background: #fff3cd;
+            border-bottom: 1px solid #ffc107;
+            padding: 0 2px;
+            border-radius: 2px;
+            /* 關鍵：調整拼音與漢字的間距 */
+            line-height: 1;
+        }
+        .hidden-rt rt { display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div id="status">正在載入字典，請稍候...</div>
     <textarea id="input" placeholder="貼上日文文章..."></textarea>
-    <button onclick="processText()">生成拼音</button>
+    <div class="controls">
+        <button class="btn" style="background:#007bff;" onclick="processText()">生成</button>
+        <button class="btn" style="background:#6c757d;" onclick="toggleRuby()">開關拼音</button>
+    </div>
     <div id="output"></div>
 </div>
 
 <script>
+    // ... (保留之前的 JS 邏輯不變)
     let tokenizer;
-    // 使用內建的 CDN 路徑，確保路徑正確
-    const dicPath = "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/";
+    kuromoji.builder({ dicPath: "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/" }).build((err, t) => { tokenizer = t; });
 
-    kuromoji.builder({ dicPath: dicPath }).build((err, t) => {
-        if (err) {
-            document.getElementById('status').innerText = "字典載入失敗，請確認網路連線。";
-            return;
-        }
-        tokenizer = t;
-        document.getElementById('status').innerText = "系統已準備就緒！";
-    });
-
-    function processText() {
-        if (!tokenizer) return alert("字典還在載入中，請稍候！");
+    async function processText() {
         const text = document.getElementById('input').value;
         const output = document.getElementById('output');
-        output.innerHTML = "";
         
-        const path = tokenizer.tokenize(text);
-        path.forEach(token => {
-            if (/[\u4e00-\u9faf]/.test(token.surface_form) && token.surface_form !== token.reading) {
-                const ruby = document.createElement("ruby");
-                const rt = document.createElement("rt");
-                rt.contentEditable = "true";
-                // 轉換片假名為平假名
-                rt.innerText = token.reading.replace(/[ァ-ン]/g, s => String.fromCharCode(s.charCodeAt(0) - 0x60));
-                
-                rt.onblur = () => {
-                    const val = rt.innerText;
-                    document.querySelectorAll(`ruby[data-word="${token.surface_form}"] rt`)
-                            .forEach(el => el.innerText = val);
-                };
-                
-                ruby.dataset.word = token.surface_form;
-                ruby.innerHTML = token.surface_form;
-                ruby.appendChild(rt);
-                output.appendChild(ruby);
-            } else {
-                output.appendChild(document.createTextNode(token.surface_form));
-            }
-        });
+        // 貼上你剛才複製的 GAS URL
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwNmIrpThvGamraSWi8a0_Go2xExloaZ_TRvNI3SCNWcpeZKSXYjtdPEh3_Xq4ytQ7u_w/exec"; 
+        
+        output.innerHTML = "正在向 Google 雲端查詢...";
+
+        try {
+            const response = await fetch(`${GAS_URL}?text=${encodeURIComponent(text)}`);
+            const data = await response.json();
+            output.innerHTML = "API 回傳成功：" + JSON.stringify(data);
+        } catch (e) {
+            output.innerHTML = "連接失敗，請檢查權限是否設為「所有人」。";
+        }
+    }
+
+    function toggleRuby() {
+        document.getElementById('output').classList.toggle('hidden-rt');
     }
 </script>
 </body>
