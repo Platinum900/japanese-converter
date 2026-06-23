@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>輕量版拼音校對</title>
+    <script src="https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f4f9; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; }
+        #status { color: #555; font-size: 0.9em; margin-bottom: 10px; }
+        textarea { width: 100%; height: 100px; box-sizing: border-box; }
+        #output { margin-top: 20px; line-height: 2.5; white-space: pre-wrap; }
+        rt { color: #d35400; font-size: 0.6em; background: #fff3cd; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="status">正在載入字典，請稍候...</div>
+    <textarea id="input" placeholder="貼上日文文章..."></textarea>
+    <button onclick="processText()">生成拼音</button>
+    <div id="output"></div>
+</div>
+
+<script>
+    let tokenizer;
+    // 使用內建的 CDN 路徑，確保路徑正確
+    const dicPath = "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/";
+
+    kuromoji.builder({ dicPath: dicPath }).build((err, t) => {
+        if (err) {
+            document.getElementById('status').innerText = "字典載入失敗，請確認網路連線。";
+            return;
+        }
+        tokenizer = t;
+        document.getElementById('status').innerText = "系統已準備就緒！";
+    });
+
+    function processText() {
+        if (!tokenizer) return alert("字典還在載入中，請稍候！");
+        const text = document.getElementById('input').value;
+        const output = document.getElementById('output');
+        output.innerHTML = "";
+        
+        const path = tokenizer.tokenize(text);
+        path.forEach(token => {
+            if (/[\u4e00-\u9faf]/.test(token.surface_form) && token.surface_form !== token.reading) {
+                const ruby = document.createElement("ruby");
+                const rt = document.createElement("rt");
+                rt.contentEditable = "true";
+                // 轉換片假名為平假名
+                rt.innerText = token.reading.replace(/[ァ-ン]/g, s => String.fromCharCode(s.charCodeAt(0) - 0x60));
+                
+                rt.onblur = () => {
+                    const val = rt.innerText;
+                    document.querySelectorAll(`ruby[data-word="${token.surface_form}"] rt`)
+                            .forEach(el => el.innerText = val);
+                };
+                
+                ruby.dataset.word = token.surface_form;
+                ruby.innerHTML = token.surface_form;
+                ruby.appendChild(rt);
+                output.appendChild(ruby);
+            } else {
+                output.appendChild(document.createTextNode(token.surface_form));
+            }
+        });
+    }
+</script>
+</body>
+</html>
