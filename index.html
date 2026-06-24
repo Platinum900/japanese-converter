@@ -27,19 +27,34 @@
         function getReading() {
             const text = document.getElementById('input').value;
             const output = document.getElementById('output');
-            const GAS_URL = "https://script.google.com/macros/s/AKfycbwNmIrpThvGamraSWi8a0_Go2xExloaZ_TRvNI3SCNWcpeZKSXYjtdPEh3_Xq4ytQ7u_w/exec"; 
             
-            output.innerText = "正在呼叫雲端...";
+            // 替換為你的 GAS URL
+            const GAS_URL = "在此貼上你的網頁應用程式URL"; 
+            
+            if (!text) {
+                output.innerText = "請輸入內容";
+                return;
+            }
 
-            // 使用 JSONP 方式繞過 CORS
+            output.innerText = "正在轉換中...";
+
+            // 核心技巧：使用 JSONP 繞過 CORS
+            // 我們動態建立一個 <script> 標籤來發送請求，這是瀏覽器允許的行為
             const script = document.createElement('script');
-            script.src = `${GAS_URL}?text=${encodeURIComponent(text)}&callback=handleResponse`;
+            script.src = `${GAS_URL}?text=${encodeURIComponent(text)}&callback=displayResult`;
             document.body.appendChild(script);
+            
+            // 請求完成後移除 script 標籤
+            script.onload = () => script.remove();
+            script.onerror = () => {
+                output.innerText = "發生連線錯誤，請確認網路或 API 設置。";
+                script.remove();
+            };
         }
 
-        // 這是接收結果的函數
-        function handleResponse(data) {
-            document.getElementById('output').innerHTML = `<strong>結果：</strong> ${data.hiragana}`;
+        // 當 GAS 回傳資料時，這個函數會自動執行
+        function displayResult(data) {
+            document.getElementById('output').innerHTML = `<strong>拼音結果：</strong><br>${data.hiragana}`;
         }
 </script>
 </body>
