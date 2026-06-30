@@ -28,17 +28,21 @@
         const data = await response.json();
         
         output.innerHTML = "";
+        // 修改你 index.html 裡面的 render 部分：
         data.lines.forEach(line => {
-            let lineDiv = document.createElement('div');
+            let div = document.createElement('div');
+            div.style.marginBottom = "20px"; // 行距
+            
             line.forEach(item => {
-                // 如果原字包含漢字，才加 ruby 標籤；平假名本身則直接顯示
-                if (/[一-龠]/.test(item.orig)) {
-                    lineDiv.innerHTML += `<ruby>${item.orig}<rt>${item.hira}</rt></ruby>`;
+                // 判斷：只要有拼音，就一律加上 <ruby>
+                // 這樣漢字上方會顯示平假名，如果 orig 本身就是平假名，ruby 效果會重疊，所以加個檢查
+                if (item.hira && item.orig !== item.hira) {
+                    div.innerHTML += `<ruby>${item.orig}<rt>${item.hira}</rt></ruby>`;
                 } else {
-                    lineDiv.innerHTML += item.orig;
+                    div.innerHTML += item.orig;
                 }
             });
-            output.appendChild(lineDiv);
+            output.appendChild(div);
         });
     }
     </script>
