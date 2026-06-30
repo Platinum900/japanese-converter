@@ -33,9 +33,6 @@ def convert_text(text: str = ""):
         converted = conv.do(line)
         for item in converted:
             # item['orig'] 是原字，item['hira'] 是對應假名
-            #line_data.append({"orig": item['orig'], "hira": item['hira']})
-            # 檢查 item 的內容
-            print(f"Debug: {item}") 
             line_data.append({
                 "orig": item['orig'], 
                 "hira": item['hira']
