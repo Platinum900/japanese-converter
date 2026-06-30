@@ -14,22 +14,15 @@ app.add_middleware(
 
 
 kks = pykakasi.kakasi()
-kks.setMode("J", "H") # J=Japanese(漢字), H=Hiragana(平假名)
+kks.setMode("J", "J") # J=Japanese(漢字), H=Hiragana(平假名)
 kks.setMode("K", "H") # K=Katakana(片假名), H=Hiragana(平假名)
 
-# 核心調整：
-# mode='H' 代表強制輸出平假名
-kks.setMode('r', 'Hepburn') # 雖然我們用不到羅馬拼音，但先設定好以免衝突
 
 # 為了確保轉換執行
 conv = kks.getConverter()
 
 @app.get("/convert")
 def convert_text(text: str = ""):
-    # 如果 text 是空的，直接回傳空列表，避免處理錯誤
-    if not text:
-        return {"lines": []}
-        
     # 使用 splitlines 保留原本的段落格式
     lines = text.splitlines()
     result_data = []
@@ -38,19 +31,15 @@ def convert_text(text: str = ""):
         line_data = []
         # 將句子轉換並保留對應關係
         converted = conv.do(line)
-        
         for item in converted:
-            # 關鍵修正：確保 item 是字典格式
-            if isinstance(item, dict):
-                # item['orig'] 是原字，item['hira'] 是對應假名
-                line_data.append({
-                    "orig": item.get('orig', ''), 
-                    "hira": item.get('hira', '')
-                })
-            else:
-                # 如果遇到異常結構，直接把該項作為文字處理
-                line_data.append({"orig": str(item), "hira": str(item)})
-                
+            # item['orig'] 是原字，item['hira'] 是對應假名
+            #line_data.append({"orig": item['orig'], "hira": item['hira']})
+            # 檢查 item 的內容
+            print(f"Debug: {item}") 
+            line_data.append({
+                "orig": item['orig'], 
+                "hira": item['hira']
+            })
         result_data.append(line_data)
         
     return {"lines": result_data}
