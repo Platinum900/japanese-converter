@@ -38,9 +38,19 @@ def convert_text(text: str = ""):
         line_data = []
         # 將句子轉換並保留對應關係
         converted = conv.do(line)
+        
         for item in converted:
-            # item['orig'] 是原字，item['hira'] 是對應假名
-            line_data.append({"orig": item['orig'], "hira": item['hira']})
+            # 關鍵修正：確保 item 是字典格式
+            if isinstance(item, dict):
+                # item['orig'] 是原字，item['hira'] 是對應假名
+                line_data.append({
+                    "orig": item.get('orig', ''), 
+                    "hira": item.get('hira', '')
+                })
+            else:
+                # 如果遇到異常結構，直接把該項作為文字處理
+                line_data.append({"orig": str(item), "hira": str(item)})
+                
         result_data.append(line_data)
         
     return {"lines": result_data}
