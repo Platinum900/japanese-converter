@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
     <style>
         body { 
@@ -36,7 +35,7 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
         }
         ruby {
-            ruby-position: over; /* force overhead */
+            ruby-position: over; /* 強制在上方 */
             ruby-align: center;
         }
         rt { 
@@ -47,48 +46,94 @@
             border-radius: 4px;        
             line-height: 1;            
         }
-        /* 手機版優化 */
-        @media (max-width: 600px) {
-            body { padding: 15px; }
-            #output { font-size: 20px; line-height: 2.5; }
-            textarea { height: 150px; }
-        }
     </style>
 </head>
 <body>
+    <div id="historySection">
+        <h3>快速存取歷史</h3>
+        <select id="historyDropdown" onchange="loadFromDropdown(this.value)">
+            <option value="">-- 選擇之前的紀錄 --</option>
+        </select>
+        <button onclick="clearHistory()" style="margin-left: 10px;">清除</button>
+    </div>
+
     <h2>日文文章 / 歌詞標音工具</h2>
     <textarea id="input" placeholder="請貼上日文歌詞..."></textarea>
-    <button onclick="convert()">Convert Kanji</button>
+    <button onclick="convert()">轉換標註</button>
 
     <div id="output"></div>
 
     <script>
-    async function convert() {
-        const text = document.getElementById('input').value;
-        const output = document.getElementById('output');
-        const API_URL = "https://japanese-kanji-api-service.onrender.com/convert";
+        async function convert() {
+            const text = document.getElementById('input').value;
+            const output = document.getElementById('output');
+            const API_URL = "https://japanese-kanji-api-service.onrender.com/convert";
 
-        const response = await fetch(`${API_URL}?text=${encodeURIComponent(text)}`);
-        const data = await response.json();
-        
-        output.innerHTML = "";
-        
-        data.lines.forEach(line => {
-            let div = document.createElement('div');
-            div.style.marginBottom = "20px"; 
+            const response = await fetch(`${API_URL}?text=${encodeURIComponent(text)}`);
+            const data = await response.json();
             
-            line.forEach(item => {
-                // 判斷：只要有拼音，就一律加上 <ruby>
-                // 這樣漢字上方會顯示平假名，如果 orig 本身就是平假名，ruby 效果會重疊，所以加個檢查
-                if (item.hira && item.orig !== item.hira) {
-                    div.innerHTML += `<ruby>${item.orig}<rt>${item.hira}</rt></ruby>`;
-                } else {
-                    div.innerHTML += item.orig;
-                }
+            output.innerHTML = "";
+            // 修改你 index.html 裡面的 render 部分：
+            data.lines.forEach(line => {
+                let div = document.createElement('div');
+                div.style.marginBottom = "20px"; // 行距
+                
+                line.forEach(item => {
+                    // 判斷：只要有拼音，就一律加上 <ruby>
+                    // 這樣漢字上方會顯示平假名，如果 orig 本身就是平假名，ruby 效果會重疊，所以加個檢查
+                    if (item.hira && item.orig !== item.hira) {
+                        div.innerHTML += `<ruby>${item.orig}<rt>${item.hira}</rt></ruby>`;
+                    } else {
+                        div.innerHTML += item.orig;
+                    }
+                });
+                // 成功後呼叫儲存
+                saveToHistory(text);
+
+                output.appendChild(div);
             });
-            output.appendChild(div);
-        });
-    }
+        }
+        // 更新渲染函數
+        function renderHistory() {
+            const dropdown = document.getElementById('historyDropdown');
+            const history = JSON.parse(localStorage.getItem('myHistory') || '[]');
+            
+            // 保留第一個預設選項
+            dropdown.innerHTML = '<option value="">-- 選擇之前的紀錄 --</option>';
+            
+            history.forEach(text => {
+                let option = document.createElement('option');
+                option.value = text;
+                // 顯示預覽文字
+                option.textContent = text.substring(0, 30) + (text.length > 30 ? '...' : '');
+                dropdown.appendChild(option);
+            });
+        }
+
+        // 選擇後觸發載入
+        function loadFromDropdown(value) {
+            if (!value) return;
+            document.getElementById('input').value = value;
+            testAPI();
+        }
+
+        function saveToHistory(text) {
+            let history = JSON.parse(localStorage.getItem('myHistory') || '[]');
+            history = [text, ...history.filter(item => item !== text)].slice(0, 10); // 10筆history
+            localStorage.setItem('myHistory', JSON.stringify(history));
+            renderHistory();
+        }
+
+        // 清除功能
+        function clearHistory() {
+            localStorage.removeItem('myHistory');
+            renderHistory();
+            document.getElementById('input').value = ""; // 清除輸入框
+        }
+
+        // 頁面載入時自動載入歷史
+        window.onload = renderHistory;
+        
     </script>
 </body>
 </html>
