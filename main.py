@@ -14,12 +14,12 @@ app.add_middleware(
 
 
 kks = pykakasi.kakasi()
-kks.setMode("J", "H") # J=Japanese(漢字), H=Hiragana(平假名)
-kks.setMode("K", "H") # K=Katakana(片假名), H=Hiragana(平假名)
+#kks.setMode("J", "H") # J=Japanese(漢字), H=Hiragana(平假名)
+#kks.setMode("K", "H") # K=Katakana(片假名), H=Hiragana(平假名)
 
 
 # 為了確保轉換執行
-conv = kks.getConverter()
+#conv = kks.getConverter()
 
 @app.get("/convert")
 def convert_text(text: str = ""):
@@ -32,18 +32,13 @@ def convert_text(text: str = ""):
     
     for line in lines:
         line_data = []
-        try:
-            # 將句子轉換並保留對應關係
-            converted = conv.do(line)
-            for item in converted:
-                # item['orig'] 是原字，item['hira'] 是對應假名
-                line_data.append({
-                    "orig": item.get('orig', ''),
-                    "hira": item.get('hira', '')
-                })
-        except Exception as e:
-            # 如果某一行轉譯出錯，至少保留原文
-            line_data.append({"orig": line, "hira": ""})
+        # 直接使用 kks.convert() 進行轉換
+        converted = kks.convert(line)
+        for item in converted:
+            line_data.append({
+                "orig": item['orig'],  # 保證是原始漢字
+                "hira": item['hira']   # 保證是對應的平假名
+            })
             
         result_data.append(line_data)
         
