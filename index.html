@@ -46,6 +46,12 @@
             border-radius: 4px;        /* 圓角處理 */
             line-height: 1;            /* 確保底色高度適中 */
         }
+        /* 手機版優化 */
+        @media (max-width: 600px) {
+            body { padding: 15px; }
+            #output { font-size: 20px; line-height: 2.5; }
+            textarea { height: 150px; }
+        }
     </style>
 </head>
 <body>
