@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: 'Helvetica Neue', sans-serif; padding: 40px; background: #f9f9f9; }
+        textarea { width: 100%; height: 150px; padding: 15px; border-radius: 8px; border: 1px solid #ccc; }
+        button { margin-top: 10px; padding: 10px 30px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #output { margin-top: 30px; line-height: 2.5; font-size: 20px; white-space: pre-wrap; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        ruby { margin: 0 2px; }
+        rt { font-size: 0.5em; color: #666; }
+    </style>
+</head>
+<body>
+    <h2>日文文章 / 歌詞標音工具</h2>
+    <textarea id="input" placeholder="請貼上日文歌詞..."></textarea>
+    <button onclick="convert()">轉換標註</button>
+
+    <div id="output"></div>
+
+    <script>
+    async function convert() {
+        const text = document.getElementById('input').value;
+        const output = document.getElementById('output');
+        const API_URL = "https://japanese-kanji-api-service.onrender.com/convert";
+
+        const response = await fetch(`${API_URL}?text=${encodeURIComponent(text)}`);
+        const data = await response.json();
+        
+        output.innerHTML = "";
+        data.lines.forEach(line => {
+            let lineDiv = document.createElement('div');
+            line.forEach(item => {
+                // 如果原字包含漢字，才加 ruby 標籤；平假名本身則直接顯示
+                if (/[一-龠]/.test(item.orig)) {
+                    lineDiv.innerHTML += `<ruby>${item.orig}<rt>${item.hira}</rt></ruby>`;
+                } else {
+                    lineDiv.innerHTML += item.orig;
+                }
+            });
+            output.appendChild(lineDiv);
+        });
+    }
+    </script>
+</body>
+</html>
