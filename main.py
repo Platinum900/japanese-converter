@@ -23,20 +23,28 @@ conv = kks.getConverter()
 
 @app.get("/convert")
 def convert_text(text: str = ""):
+    if not text:
+        return {"lines": []}
+    
     # 使用 splitlines 保留原本的段落格式
     lines = text.splitlines()
     result_data = []
     
     for line in lines:
         line_data = []
-        # 將句子轉換並保留對應關係
-        converted = conv.do(line)
-        for item in converted:
-            # item['orig'] 是原字，item['hira'] 是對應假名
-            line_data.append({
-                "orig": item['orig'], 
-                "hira": item['hira']
-            })
+        try:
+            # 將句子轉換並保留對應關係
+            converted = conv.do(line)
+            for item in converted:
+                # item['orig'] 是原字，item['hira'] 是對應假名
+                line_data.append({
+                    "orig": item.get('orig', ''),
+                    "hira": item.get('hira', '')
+                })
+        except Exception as e:
+            # 如果某一行轉譯出錯，至少保留原文
+            line_data.append({"orig": line, "hira": ""})
+            
         result_data.append(line_data)
         
     return {"lines": result_data}
