@@ -16,7 +16,6 @@ app.add_middleware(
 kks = pykakasi.kakasi()
 kks.setMode("J", "H") # J=Japanese(漢字), H=Hiragana(平假名)
 kks.setMode("K", "H") # K=Katakana(片假名), H=Hiragana(平假名)
-kks.setMode("H", "H") # 顯式告訴它平假名保持不變
 
 
 # 為了確保轉換執行
